@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Prime Reel</title>
+<meta name="description" content="Spin the reel, draft real pros into your player's attribute slots, then sim the whole career. Eight sports, daily challenge, Hall of Fame.">
+<meta name="theme-color" content="#090f1d">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: one column shell. Home = hero + marquee + 4x2 sport grid + Hall of Fame. Build = slots left, reel right. Career = verdict, chart, season table. */
+:root{
+  --bg:#edf0f5; --surface:#ffffff; --ink:#0d1526; --muted:#5d6980; --line:#d3d9e4;
+  --accent:#1d4dff; --accent-ink:#ffffff; --hot:#e8460f; --gold:#a97800; --good:#0a8f5a; --chip:#e3e8f1;
+  --display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
+  --body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#090f1d; --surface:#121b30; --ink:#e9eef9; --muted:#93a0ba; --line:#24304b;
+    --accent:#6b8bff; --accent-ink:#0a1020; --hot:#ff7a45; --gold:#f0b93a; --good:#38c98c; --chip:#1a2540;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#090f1d; --surface:#121b30; --ink:#e9eef9; --muted:#93a0ba; --line:#24304b;
+  --accent:#6b8bff; --accent-ink:#0a1020; --hot:#ff7a45; --gold:#f0b93a; --good:#38c98c; --chip:#1a2540;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1100px;margin:0 auto;padding-inline:16px;padding-block:20px 56px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:16px}
+.brand{font-family:var(--display);font-weight:900;font-size:26px;letter-spacing:.04em;text-transform:uppercase;display:flex;align-items:center;gap:10px;background:none;border:0;padding:0}
+.brand i{display:inline-block;width:14px;height:14px;background:var(--hot);border-radius:50%;box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--hot)}
+.meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.pill{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-family:var(--mono);font-size:12px;font-weight:500;color:var(--ink)}
+.pill b{color:var(--hot)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:10px 16px;font-weight:600;transition:transform .12s,background .12s}
+.btn:hover:not(:disabled){transform:translateY(-1px);border-color:var(--ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.hot{background:var(--hot);color:#fff;border-color:var(--hot)}
+.btn.big{font-family:var(--display);font-size:24px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:12px 26px}
+h1,h2,h3{font-family:var(--display);text-transform:uppercase;margin:0;line-height:.95;text-wrap:balance}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+
+/* hero */
+.hero{display:grid;gap:14px;padding-block:18px 8px}
+.hero h1{font-size:clamp(64px,15vw,168px);font-weight:900;letter-spacing:.01em}
+.hero h1 span{color:var(--hot)}
+.hero p{max-width:52ch;font-size:17px;margin:0;color:var(--muted)}
+.hero p b{color:var(--ink);font-weight:600}
+.modes{display:inline-flex;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:4px;gap:4px;width:max-content;max-width:100%}
+.modes button{border:0;background:none;border-radius:7px;padding:9px 16px;font-weight:600;color:var(--muted)}
+.modes button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.modenote{font-size:13px;color:var(--muted);min-height:20px}
+
+.marquee{overflow:hidden;border-block:1px solid var(--line);margin-block:18px;padding-block:10px;mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+.marquee .track{display:flex;gap:10px;width:max-content;animation:slide 70s linear infinite}
+.marquee span{font-family:var(--mono);font-size:12px;white-space:nowrap;padding:5px 10px;background:var(--chip);border-radius:6px}
+.marquee span em{font-style:normal;color:var(--hot);font-weight:700;margin-left:6px}
+@keyframes slide{to{transform:translateX(-50%)}}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.tile{position:relative;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;min-height:150px;transition:transform .14s,border-color .14s}
+.tile:hover:not(:disabled){transform:translateY(-3px);border-color:var(--accent)}
+.tile:disabled{opacity:.6;cursor:not-allowed}
+.tile .lg{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.tile h3{font-size:38px;font-weight:800}
+.tile .attrs{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:auto}
+.tile .done{position:absolute;top:12px;right:12px;font-family:var(--mono);font-size:11px;background:var(--good);color:#fff;border-radius:6px;padding:2px 8px}
+.sect{margin-top:34px}
+.sect h2{font-size:34px;margin-bottom:12px}
+.note{font-size:13px;color:var(--muted);max-width:75ch}
+
+.hof{display:grid;gap:8px}
+.hofrow{display:grid;grid-template-columns:1fr auto;gap:4px 16px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.hofrow b{font-family:var(--display);font-size:22px;text-transform:uppercase;letter-spacing:.03em}
+.hofrow small{color:var(--muted);grid-column:1}
+.hofrow .sc{grid-row:1/3;grid-column:2;text-align:right;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.hofrow .sc strong{display:block;font-size:22px;color:var(--ink)}
+.empty{border:1px dashed var(--line);border-radius:10px;padding:18px;color:var(--muted)}
+
+/* build */
+.buildhead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.buildhead h2{font-size:clamp(40px,8vw,72px);font-weight:900}
+.ovr{display:flex;align-items:baseline;gap:8px}
+.ovr .n{font-family:var(--display);font-weight:900;font-size:76px;line-height:.8}
+.ovr .l{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.14em}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:820px){.cols{grid-template-columns:minmax(0,1fr)}}
+.slots{display:grid;gap:10px}
+.slot{display:grid;grid-template-columns:1fr auto;align-items:center;gap:2px 12px;text-align:left;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-height:74px}
+.slot .a{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.slot .who{font-family:var(--display);font-size:26px;font-weight:800;text-transform:uppercase;letter-spacing:.02em;line-height:1}
+.slot .who.dim{color:var(--muted);font-weight:700;font-size:20px}
+.slot .v{grid-row:1/3;grid-column:2;font-family:var(--display);font-weight:900;font-size:46px;line-height:1}
+.slot.target{border-color:var(--accent);border-style:dashed;background:color-mix(in srgb,var(--accent) 8%,var(--surface))}
+.slot.target:hover{border-style:solid}
+.slot.filled{background:var(--surface)}
+.t-elite{color:var(--hot)}.t-great{color:var(--accent)}.t-good{color:var(--ink)}.t-low{color:var(--muted)}
+.reelbox{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;gap:14px}
+.window{position:relative;height:216px;overflow:hidden;border-radius:10px;background:var(--bg);border:1px solid var(--line)}
+.window::before{content:"";position:absolute;left:0;right:0;top:72px;height:72px;border-block:2px solid var(--hot);background:color-mix(in srgb,var(--hot) 9%,transparent);z-index:1;pointer-events:none}
+.window::after{content:"";position:absolute;inset:0;background:linear-gradient(var(--bg),transparent 30%,transparent 70%,var(--bg));pointer-events:none;z-index:2;opacity:.85}
+.strip{position:absolute;left:0;right:0;top:0;will-change:transform}
+.strip div{height:72px;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:800;font-size:34px;text-transform:uppercase;letter-spacing:.03em;padding-inline:10px;text-align:center;white-space:nowrap;overflow:hidden}
+.card{display:grid;gap:10px}
+.card h3{font-size:44px;font-weight:900}
+.chips{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.chip{background:var(--chip);border-radius:8px;padding:8px 4px;text-align:center}
+.chip small{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--muted)}
+.chip b{font-family:var(--display);font-size:30px;line-height:1.1}
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.hint{font-size:13px;color:var(--muted)}
+
+/* career */
+.verdict{display:grid;gap:8px;padding-block:6px 18px}
+.verdict h2{font-size:clamp(46px,9vw,104px);font-weight:900}
+.verdict h2 span{color:var(--hot)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-block:12px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px}
+.stat small{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.stat b{font-family:var(--display);font-size:40px;font-weight:800;line-height:1.05}
+.chart{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px}
+.chart svg{display:block;width:100%;height:auto}
+.chart text{font-family:var(--mono);font-size:11px;fill:var(--muted)}
+.tw{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-top:14px}
+table{border-collapse:collapse;width:100%;min-width:640px;font-variant-numeric:tabular-nums}
+th,td{padding:8px 12px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap;font-family:var(--mono);font-size:13px}
+th{font-size:11px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;position:sticky;top:0;background:var(--surface)}
+th:first-child,td:first-child{text-align:left}
+td.hon,th.hon{text-align:left;white-space:normal;min-width:180px}
+tr.tot td{font-weight:700;border-bottom:0;background:var(--chip)}
+.badge{display:inline-block;margin:1px 4px 1px 0;padding:1px 8px;border-radius:5px;font-size:11px;background:var(--chip)}
+.badge.mvp{background:var(--hot);color:#fff}
+.badge.champ{background:var(--accent);color:var(--accent-ink)}
+.badge.inj{background:transparent;border:1px solid var(--muted);color:var(--muted)}
+.picks{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;z-index:20;max-width:calc(100% - 32px)}
+footer{margin-top:44px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px;max-width:80ch}
+@media (prefers-reduced-motion:reduce){.marquee .track{animation:none}.btn,.tile{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <button class="brand" id="home-btn" aria-label="Prime Reel home"><i></i>Prime Reel</button>
+    <div class="meta"><span class="pill" id="streak"></span></div>
+  </div>
+
+  <main id="view-home">
+    <section class="hero">
+      <div class="eyebrow">Career simulator · 8 sports · 200+ real pros</div>
+      <h1>Spin.<br>Draft.<br><span>Sim.</span></h1>
+      <p>Spin a reel of real professionals and <b>drop each one into an attribute slot</b> on your own custom athlete. Five spins, five slots. Then the game plays out the whole career, season by season, to a Hall of Fame verdict.</p>
+      <div class="modes" role="group" aria-label="Game mode">
+        <button id="mode-free" aria-pressed="true">Free play</button>
+        <button id="mode-daily" aria-pressed="false">Daily challenge</button>
+      </div>
+      <div class="modenote" id="modenote"></div>
+    </section>
+    <div class="marquee" aria-hidden="true"><div class="track" id="marquee"></div></div>
+    <section>
+      <div class="eyebrow" style="margin-bottom:10px">Pick a sport</div>
+      <div class="grid" id="sports"></div>
+    </section>
+    <section class="sect">
+      <h2>Hall of Fame</h2>
+      <div class="hof" id="hof"></div>
+    </section>
+    <footer>Prime Reel is an independent fan project with no affiliation to any league, team or player. Player names are used to identify real athletes; the ratings are my own rough estimates of each athlete's prime and are not official statistics.</footer>
+  </main>
+
+  <main id="view-build" hidden>
+    <div class="buildhead">
+      <div>
+        <button class="btn" id="back-home">← Sports</button>
+        <div class="eyebrow" id="b-sub" style="margin-top:14px"></div>
+        <h2 id="b-title"></h2>
+      </div>
+      <div class="ovr"><span class="n" id="b-ovr">--</span><span class="l">OVERALL</span></div>
+    </div>
+    <div class="cols">
+      <div>
+        <div class="eyebrow" style="margin-bottom:10px">Your player</div>
+        <div class="slots" id="slots"></div>
+      </div>
+      <div class="reelbox">
+        <div class="eyebrow" id="spinlabel"></div>
+        <div class="window" aria-hidden="true"><div class="strip" id="strip"></div></div>
+        <div class="card" id="card" aria-live="polite"></div>
+        <div class="actions">
+          <button class="btn hot big" id="spin">Spin</button>
+          <button class="btn" id="reroll">Skip player (1)</button>
+        </div>
+        <div class="hint" id="hint"></div>
+      </div>
+    </div>
+  </main>
+
+  <main id="view-career" hidden></main>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+"use strict";
+/* ---------- data: [name, rating1..rating5] (estimated prime-level ratings) ---------- */
+const SPORTS = {
+  pitcher:{key:"pitcher",league:"Baseball",name:"Pitcher",attrs:["Velocity","Control","Movement","Stamina","Clutch"],
+    short:["VEL","CTL","MOV","STA","CLU"],start:21,peak:[26,31],retire:37,title:"World Series",award:"Cy Young",allstar:"All-Star",
+    players:[["Nolan Ryan",99,58,84,96,72],["Randy Johnson",96,66,96,90,82],["Pedro Martinez",92,92,98,80,84],["Greg Maddux",72,99,95,92,88],["Sandy Koufax",93,86,97,85,92],["Bob Gibson",92,80,93,94,96],["Clayton Kershaw",88,94,98,86,78],["Max Scherzer",93,88,92,90,88],["Justin Verlander",96,85,90,92,90],["Jacob deGrom",99,90,96,72,84],["Roger Clemens",95,88,90,95,80],["Tom Seaver",90,90,88,94,88],["Mariano Rivera",84,97,99,55,99],["Aroldis Chapman",100,55,80,40,72],["Walter Johnson",96,88,84,98,86],["Cy Young",80,90,80,99,80],["Steve Carlton",88,80,96,96,86],["Juan Marichal",84,96,90,92,84],["Gerrit Cole",96,86,88,88,86],["Shohei Ohtani",98,72,92,70,90],["Zack Greinke",85,92,90,88,72],["Chris Sale",94,90,96,78,76],["Felix Hernandez",92,85,94,88,74],["Tarik Skubal",96,92,94,82,84],["Paul Skenes",99,86,92,80,84],["Dwight Gooden",95,78,96,86,68],["Roy Halladay",92,96,94,96,90],["Bartolo Colon",88,94,80,84,60]]},
+  hitter:{key:"hitter",league:"Baseball",name:"Hitter",attrs:["Contact","Power","Eye","Speed","Fielding"],
+    short:["CON","POW","EYE","SPD","FLD"],start:21,peak:[26,31],retire:38,title:"World Series",award:"MVP",allstar:"All-Star",
+    players:[["Babe Ruth",82,99,97,55,72],["Ted Williams",96,90,99,55,60],["Barry Bonds",86,99,99,72,80],["Hank Aaron",92,94,86,72,82],["Willie Mays",88,94,84,94,99],["Mickey Mantle",82,97,90,90,78],["Ty Cobb",99,66,80,92,80],["Tony Gwynn",99,58,88,72,74],["Ichiro Suzuki",98,44,74,95,92],["Rickey Henderson",84,72,98,99,82],["Mike Trout",88,94,97,88,88],["Shohei Ohtani",90,99,92,86,55],["Aaron Judge",84,99,96,60,82],["Mookie Betts",92,84,92,88,94],["Albert Pujols",96,94,90,50,78],["Derek Jeter",92,68,84,82,80],["Ken Griffey Jr.",90,95,84,86,96],["Jackie Robinson",92,70,90,95,84],["Joe DiMaggio",93,90,86,78,88],["Lou Gehrig",95,93,94,60,72],["Frank Robinson",90,94,88,82,84],["Roberto Clemente",94,84,74,84,97],["Cal Ripken Jr.",86,84,80,60,90],["Ozzie Smith",78,30,80,88,99],["Mike Piazza",92,94,80,40,50],["Ronald Acuña Jr.",90,90,88,98,86],["Juan Soto",90,90,99,60,68],["Stan Musial",96,88,92,72,80]]},
+  hoops:{key:"hoops",league:"Basketball",name:"Baller",attrs:["Scoring","Playmaking","Defense","Rebounding","Athleticism"],
+    short:["SCO","PLY","DEF","REB","ATH"],start:20,peak:[24,30],retire:36,title:"Championship",award:"MVP",allstar:"All-Star",
+    players:[["Michael Jordan",99,80,96,68,98],["LeBron James",95,96,84,80,96],["Kobe Bryant",96,78,88,64,92],["Magic Johnson",84,99,74,80,86],["Larry Bird",92,92,72,82,72],["Kareem Abdul-Jabbar",96,72,82,90,80],["Wilt Chamberlain",96,74,80,99,94],["Bill Russell",62,70,99,99,90],["Shaquille O'Neal",96,58,86,96,90],["Tim Duncan",88,74,94,94,78],["Hakeem Olajuwon",92,68,96,94,90],["Stephen Curry",97,92,68,56,82],["Kevin Durant",98,74,80,68,86],["Nikola Jokic",90,99,68,90,64],["Giannis Antetokounmpo",94,76,92,90,99],["Kawhi Leonard",92,70,97,74,86],["Dirk Nowitzki",93,68,62,72,70],["Allen Iverson",94,84,72,40,94],["Steve Nash",82,97,50,40,72],["Dennis Rodman",32,40,90,99,88],["Scottie Pippen",76,88,96,70,90],["Charles Barkley",88,72,72,96,84],["Karl Malone",92,70,80,90,84],["John Stockton",66,99,84,40,66],["Luka Doncic",94,94,66,78,78],["Shai Gilgeous-Alexander",96,84,84,52,88],["Victor Wembanyama",84,60,99,88,94],["Dwyane Wade",92,82,88,54,94],["Kyrie Irving",93,84,60,40,84]]},
+  qb:{key:"qb",league:"Football",name:"Quarterback",attrs:["Arm Power","Accuracy","Mobility","Vision","Clutch"],
+    short:["ARM","ACC","MOB","VIS","CLU"],start:22,peak:[27,35],retire:40,title:"Super Bowl",award:"MVP",allstar:"Pro Bowl",
+    players:[["Tom Brady",78,95,50,99,99],["Patrick Mahomes",96,94,86,99,98],["Peyton Manning",84,96,44,99,86],["Joe Montana",76,94,70,96,99],["Dan Marino",93,93,42,92,78],["John Elway",97,84,80,88,92],["Brett Favre",96,86,74,84,86],["Aaron Rodgers",95,98,76,96,88],["Drew Brees",80,98,58,96,86],["Steve Young",88,94,92,92,86],["Johnny Unitas",85,90,54,94,94],["Terry Bradshaw",94,76,66,80,92],["Troy Aikman",82,92,52,88,90],["Josh Allen",99,84,92,86,88],["Lamar Jackson",90,82,99,88,84],["Jalen Hurts",84,80,90,84,88],["Randall Cunningham",92,76,97,78,72],["Michael Vick",99,66,99,66,70],["Russell Wilson",88,88,88,90,88],["Joe Burrow",88,96,74,94,92],["Roger Staubach",84,88,86,90,96],["Kurt Warner",86,94,50,92,88],["Ben Roethlisberger",92,86,72,86,90],["Philip Rivers",88,90,50,90,76],["Matthew Stafford",98,90,66,90,86],["Justin Herbert",96,88,80,86,74],["Fran Tarkenton",78,84,96,88,76]]},
+  soccer:{key:"soccer",league:"Soccer",name:"Forward",attrs:["Shooting","Passing","Dribbling","Pace","Physical"],
+    short:["SHO","PAS","DRI","PAC","PHY"],start:19,peak:[24,30],retire:36,title:"Champions League",award:"Ballon d'Or",allstar:"Team of the Year",
+    players:[["Lionel Messi",96,97,99,84,64],["Cristiano Ronaldo",97,82,90,92,90],["Pelé",97,90,96,92,80],["Diego Maradona",90,94,99,84,72],["Johan Cruyff",88,95,96,88,70],["Zinedine Zidane",84,96,96,68,80],["Ronaldo Nazário",98,80,97,94,78],["Ronaldinho",88,92,99,86,70],["Thierry Henry",94,86,92,96,78],["Kylian Mbappé",92,84,94,99,76],["Erling Haaland",98,66,80,95,96],["Kevin De Bruyne",88,99,88,74,76],["Luka Modrić",76,96,92,72,72],["Xavi",66,99,90,64,60],["Andrés Iniesta",74,97,96,70,58],["Zlatan Ibrahimović",94,84,86,76,96],["Neymar",88,90,98,90,66],["Mohamed Salah",92,84,92,94,80],["Robert Lewandowski",98,80,84,80,88],["Franz Beckenbauer",78,94,88,80,90],["Roberto Baggio",92,92,94,80,64],["George Best",90,86,98,88,66],["Ferenc Puskás",98,84,88,82,72],["Vinícius Júnior",84,80,96,98,68],["Harry Kane",96,90,74,72,88],["Jude Bellingham",86,88,90,82,86],["Lamine Yamal",86,90,96,92,58]]},
+  hockey:{key:"hockey",league:"Hockey",name:"Skater",attrs:["Shooting","Passing","Skating","Defense","Physical"],
+    short:["SHO","PAS","SKT","DEF","PHY"],start:19,peak:[23,30],retire:37,title:"Stanley Cup",award:"Hart Trophy",allstar:"All-Star",
+    players:[["Wayne Gretzky",90,99,88,60,50],["Mario Lemieux",96,98,88,60,84],["Bobby Orr",88,96,98,96,76],["Gordie Howe",92,90,84,80,98],["Sidney Crosby",92,96,92,86,84],["Alex Ovechkin",99,84,86,64,92],["Connor McDavid",96,99,99,66,64],["Steve Yzerman",90,94,90,82,70],["Jaromír Jágr",92,94,86,60,92],["Mark Messier",88,92,88,86,94],["Nathan MacKinnon",96,92,96,72,80],["Nikita Kucherov",94,98,90,64,64],["Leon Draisaitl",94,96,82,64,76],["Patrick Kane",92,96,94,54,50],["Brett Hull",99,80,80,44,70],["Ray Bourque",88,92,88,96,80],["Nicklas Lidström",78,90,92,98,74],["Pavel Datsyuk",84,94,88,94,60],["Auston Matthews",99,84,88,72,74],["Cale Makar",88,94,96,92,66],["Mike Bossy",98,86,80,50,60],["Phil Esposito",96,88,76,56,84],["Guy Lafleur",95,92,94,60,66],["Erik Karlsson",76,96,94,84,56],["Zdeno Chara",86,72,68,96,99],["Evgeni Malkin",90,94,88,68,88]]},
+  golf:{key:"golf",league:"Golf",name:"Golfer",attrs:["Driving","Approach","Short Game","Putting","Mental"],
+    short:["DRV","APP","SHT","PUT","MNT"],start:22,peak:[27,40],retire:48,title:"Major",award:"Player of the Year",allstar:"Top 10 finish",
+    players:[["Tiger Woods",96,99,98,98,99],["Jack Nicklaus",92,98,90,94,99],["Arnold Palmer",90,88,90,88,90],["Rory McIlroy",99,94,86,84,80],["Scottie Scheffler",92,99,90,86,94],["Phil Mickelson",92,90,99,84,80],["Seve Ballesteros",90,92,99,88,94],["Ben Hogan",88,99,92,86,96],["Gary Player",76,90,96,90,92],["Greg Norman",96,94,84,76,72],["Bryson DeChambeau",99,88,84,86,80],["Jordan Spieth",82,90,94,97,90],["Jon Rahm",94,94,88,88,84],["Brooks Koepka",96,90,82,84,97],["Sam Snead",92,92,90,82,80],["Tom Watson",88,94,96,92,88],["Nick Faldo",82,96,88,90,96],["Lee Trevino",78,96,90,90,90],["Bobby Jones",86,92,90,92,92],["Dustin Johnson",99,90,84,80,84],["Justin Thomas",92,92,90,88,84],["Ernie Els",94,88,84,82,80],["Jason Day",94,92,86,88,82],["Xander Schauffele",90,92,86,88,90],["Annika Sörenstam",90,98,90,92,96],["Nelly Korda",90,94,88,86,84]]},
+  tennis:{key:"tennis",league:"Tennis",name:"Tennis Pro",attrs:["Serve","Forehand","Backhand","Movement","Mental"],
+    short:["SRV","FH","BH","MOV","MNT"],start:18,peak:[22,28],retire:34,title:"Grand Slam",award:"Year-End No. 1",allstar:"Top 10",
+    players:[["Roger Federer",96,99,88,94,92],["Rafael Nadal",88,99,90,98,99],["Novak Djokovic",92,94,97,99,99],["Pete Sampras",99,92,84,84,92],["Andre Agassi",82,92,97,88,86],["Serena Williams",99,94,90,88,99],["Steffi Graf",88,99,92,94,94],["Martina Navratilova",88,90,94,94,94],["Björn Borg",80,88,94,94,99],["John McEnroe",90,86,90,90,78],["Andy Murray",88,84,96,96,88],["Carlos Alcaraz",92,97,92,97,92],["Jannik Sinner",92,95,97,94,94],["Ivan Lendl",92,96,88,84,90],["Rod Laver",88,94,94,94,96],["Venus Williams",98,90,88,86,84],["Iga Świątek",82,95,90,94,92],["Aryna Sabalenka",96,97,90,84,80],["Monica Seles",80,90,99,88,90],["Boris Becker",98,84,80,80,88],["Stefan Edberg",90,80,92,92,86],["Jimmy Connors",82,88,98,88,96],["Naomi Osaka",96,96,88,84,78],["Coco Gauff",88,88,90,92,84],["Maria Sharapova",90,94,90,80,94]]}
+};
+const ORDER=["pitcher","hitter","hoops","qb","soccer","hockey","golf","tennis"];
+for(const k of ORDER){SPORTS[k].pool=SPORTS[k].players.map(p=>({n:p[0],r:p.slice(1)}));}
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const g=x=>clamp((x-40)/59,0,1);
+const fmt1=n=>n.toFixed(1);
+function hash(s){let h=1779033703^s.length;for(let i=0;i<s.length;i++){h=Math.imul(h^s.charCodeAt(i),3432918353);h=h<<13|h>>>19;}return h>>>0;}
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function gauss(r){return (r()+r()+r()+r()-2)*1.7;}
+function tier(v){return v>=92?"t-elite":v>=82?"t-great":v>=70?"t-good":"t-low";}
+function todayKey(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function store(key,val){try{if(val===undefined){const v=localStorage.getItem(key);return v?JSON.parse(v):null;}localStorage.setItem(key,JSON.stringify(val));}catch(e){return null;}}
+let toastT;function toast(msg){const t=$("#toast");t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2600);}
+const reduceMotion=()=>window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- persistent state ---------- */
+function daily(){return store("pr_daily")||{last:null,streak:0,days:{}};}
+function hof(){return store("pr_hof")||[];}
+
+/* ---------- career sim ---------- */
+function wavg(rows,k,w,d){let n=0,s=0;rows.forEach(r=>{n+=r.s[w];s+=r.s[k]*r.s[w];});return n?(s/n).toFixed(d):"—";}
+function sum(rows,k){return rows.reduce((a,r)=>a+r.s[k],0);}
+const COLS={
+  pitcher:[{k:"w",l:"W",tot:r=>sum(r,"w")},{k:"l",l:"L",tot:r=>sum(r,"l")},{k:"era",l:"ERA",f:v=>v.toFixed(2),tot:r=>wavg(r,"era","ip",2)},{k:"ip",l:"IP",tot:r=>sum(r,"ip")},{k:"k",l:"K",tot:r=>sum(r,"k")}],
+  hitter:[{k:"gp",l:"G",tot:r=>sum(r,"gp")},{k:"avg",l:"AVG",f:v=>v.toFixed(3).replace(/^0/,""),tot:r=>wavg(r,"avg","gp",3).replace(/^0/,"")},{k:"hr",l:"HR",tot:r=>sum(r,"hr")},{k:"rbi",l:"RBI",tot:r=>sum(r,"rbi")},{k:"sb",l:"SB",tot:r=>sum(r,"sb")},{k:"ops",l:"OPS",f:v=>v.toFixed(3).replace(/^0/,""),tot:r=>wavg(r,"ops","gp",3).replace(/^0/,"")}],
+  hoops:[{k:"gp",l:"GP",tot:r=>sum(r,"gp")},{k:"pts",l:"PPG",f:fmt1,tot:r=>wavg(r,"pts","gp",1)},{k:"reb",l:"RPG",f:fmt1,tot:r=>wavg(r,"reb","gp",1)},{k:"ast",l:"APG",f:fmt1,tot:r=>wavg(r,"ast","gp",1)},{k:"stl",l:"SPG",f:fmt1,tot:r=>wavg(r,"stl","gp",1)}],
+  qb:[{k:"yds",l:"Pass YDS",tot:r=>sum(r,"yds").toLocaleString()},{k:"td",l:"TD",tot:r=>sum(r,"td")},{k:"int",l:"INT",tot:r=>sum(r,"int")},{k:"rush",l:"Rush YDS",tot:r=>sum(r,"rush").toLocaleString()},{k:"rate",l:"RTG",tot:r=>Math.round(r.reduce((a,x)=>a+x.s.rate,0)/r.length)}],
+  soccer:[{k:"apps",l:"Apps",tot:r=>sum(r,"apps")},{k:"gls",l:"Goals",tot:r=>sum(r,"gls")},{k:"ast",l:"Assists",tot:r=>sum(r,"ast")},{k:"rating",l:"Rating",f:v=>v.toFixed(2),tot:r=>wavg(r,"rating","apps",2)}],
+  hockey:[{k:"gp",l:"GP",tot:r=>sum(r,"gp")},{k:"g",l:"G",tot:r=>sum(r,"g")},{k:"a",l:"A",tot:r=>sum(r,"a")},{k:"pts",l:"PTS",tot:r=>sum(r,"pts")},{k:"pm",l:"+/-",f:v=>(v>0?"+":"")+v,tot:r=>{const t=sum(r,"pm");return (t>0?"+":"")+t;}}],
+  golf:[{k:"starts",l:"Starts",tot:r=>sum(r,"starts")},{k:"wins",l:"Wins",tot:r=>sum(r,"wins")},{k:"maj",l:"Majors",tot:r=>sum(r,"maj")},{k:"top10",l:"Top 10s",tot:r=>sum(r,"top10")},{k:"avg",l:"Scoring",f:v=>v.toFixed(2),tot:r=>wavg(r,"avg","starts",2)}],
+  tennis:[{k:"w",l:"W",tot:r=>sum(r,"w")},{k:"l",l:"L",tot:r=>sum(r,"l")},{k:"titles",l:"Titles",tot:r=>sum(r,"titles")},{k:"maj",l:"Slams",tot:r=>sum(r,"maj")}]
+};
+const HEAD={pitcher:["w","k","era"],hitter:["hr","rbi","avg"],hoops:["pts","reb","ast"],qb:["yds","td","rate"],soccer:["gls","ast","apps"],hockey:["g","a","pts"],golf:["wins","maj","top10"],tennis:["titles","maj","w"]};
+
+function seasonStats(sp,a,ovr,av,r){
+  const t=g(ovr),n=()=>(r()-.5);
+  switch(sp){
+    case"pitcher":{const [v,c,m,s,cl]=a.map(g);
+      const era=clamp(5.6-3.9*(.28*c+.28*m+.24*v+.2*t)+n()*.5,1.3,6.6);
+      const ip=Math.round((70+150*s*(.5+.5*t))*av);const k9=5+6*(.5*v+.5*m);const gs=ip/6.3;
+      return{era,ip,k:Math.round(ip*k9/9),w:Math.round(gs*(.28+.42*t)),l:Math.max(0,Math.round(gs*(.5-.3*t)))};}
+    case"hitter":{const [c,p,e,s]=a.map(g);
+      const hr=Math.round((6+52*p*(.7+.3*c))*av*(.9+r()*.2));
+      return{gp:Math.round(162*av),avg:clamp(.205+.14*(.6*c+.4*e)+n()*.02,.19,.39),hr,sb:Math.round(40*s*s*av),rbi:Math.round((hr*1.5+35+45*c)*av),ops:clamp(.58+.5*t+n()*.05,.55,1.3)};}
+    case"hoops":{const [sc,pl,df,rb]=a.map(g);
+      return{gp:Math.round(82*av),pts:(5+27*sc*(.75+.25*t))+n()*2,reb:1.5+11.5*rb+n(),ast:.8+10.5*pl+n(),stl:.5+1.9*df+n()*.3};}
+    case"qb":{const [arm,acc,mob,vis]=a.map(g);
+      const yds=Math.round((2400+3000*(.45*arm+.55*acc))*av*(.94+r()*.12));
+      return{yds,td:Math.round(yds/135*(.65+.6*acc)),int:Math.round((19-13*(.6*acc+.4*vis))*av*(.8+r()*.4)),rush:Math.round((40+650*mob*mob)*av),rate:Math.round(62+45*t+n()*5)};}
+    case"soccer":{const [sh,pa,,pc]=a.map(g);
+      return{apps:Math.round(38*av),gls:Math.round((2+30*sh*(.6+.4*pc))*av*(.85+r()*.3)),ast:Math.round((1+17*pa)*av*(.85+r()*.3)),rating:6+2.3*t+n()*.2};}
+    case"hockey":{const [sh,pa,sk,df]=a.map(g);
+      const gg=Math.round((3+50*sh*(.6+.4*sk))*av*(.85+r()*.3)),aa=Math.round((6+75*pa*(.7+.3*sk))*av*(.85+r()*.3));
+      return{gp:Math.round(82*av),g:gg,a:aa,pts:gg+aa,pm:Math.round((-8+40*df*(.5+.5*t))*av+n()*8)};}
+    case"golf":{const starts=Math.round(22*av+3);const p=.01+.24*t*t*t;let maj=0;for(let i=0;i<4;i++)if(r()<p*av)maj++;
+      const wins=Math.max(maj,Math.round(8*t*t*t*av*(.6+r()*.8)));
+      return{starts,wins,maj,top10:Math.min(starts,Math.round(starts*(.12+.6*t*t))),avg:73.8-4.3*t+n()*.4};}
+    case"tennis":{const m=Math.round((62+8*r())*av);const w=Math.round(m*(.5+.42*t+n()*.04));const p=.01+.24*t*t*t;let maj=0;for(let i=0;i<4;i++)if(r()<p*av)maj++;
+      return{w,l:m-w,titles:Math.max(maj,Math.round((.4+9*t*t)*av*(.7+.6*r()))),maj};}
+  }
+}
+function ageFactor(cfg,age){
+  if(age<cfg.peak[0])return 1-.032*(cfg.peak[0]-age);
+  if(age<=cfg.peak[1])return 1;
+  const d=age-cfg.peak[1];return 1-.014*d-.0022*d*d;
+}
+function simCareer(sp,picks,r){
+  const cfg=SPORTS[sp];const a=picks.map(p=>p.v);const solo=sp==="golf"||sp==="tennis";
+  const ovr=Math.round(a.reduce((x,y)=>x+y,0)/a.length);const base=clamp(99-(99-ovr)*1.75,40,99);
+  let age=cfg.start+Math.floor(r()*3);const retire=cfg.retire+Math.floor(r()*5)-2;
+  const rows=[];let pen=1,score=0,mvps=0,titles=0,allstars=0,peak=0;
+  while(age<=retire){
+    const so=clamp(base*ageFactor(cfg,age)*pen+gauss(r)*1.5,40,99);pen=1;
+    let av,inj="";const x=r();
+    if(x<.03){av=.2+r()*.25;inj="major";pen=.97;}else if(x<.15){av=.6+r()*.25;inj="minor";}else av=.92+r()*.08;
+    const s=seasonStats(sp,a.map(v=>clamp(v*so/ovr,30,99)),so,av,r);
+    const honors=[];let maj=0;
+    const mvpP=av>.6?clamp((so-89)/14,0,.7):0;
+    if(r()<mvpP){honors.push({t:"mvp",l:cfg.award});mvps++;}
+    else if(so>=80&&av>.6){honors.push({t:"",l:cfg.allstar});allstars++;}
+    if(solo){maj=s.maj;if(maj){titles+=maj;honors.push({t:"champ",l:(maj>1?maj+"× ":"")+cfg.title+(maj>1?"s":"")});}}
+    else{const p=(.02+.30*g(so)*g(so))*(av>.5?1:.4);if(r()<p){titles++;honors.push({t:"champ",l:cfg.title});}}
+    if(inj)honors.push({t:"inj",l:inj==="major"?"Major injury":"Injured"});
+    score+=Math.max(0,so-70)*av;
+    peak=Math.max(peak,so);
+    rows.push({age,ovr:Math.round(so),s,honors});
+    age++;
+    if(rows.length>=3&&so<60&&age>cfg.peak[1]+2)break;
+  }
+  score+=mvps*12+titles*(solo?12:10)+allstars*2;
+  score=Math.round(score*(sp==="golf"?.5:sp==="tennis"?.68:1));
+  const tiers=[[70,"Journeyman"],[140,"Solid Pro"],[230,"All-Star"],[340,"Hall of Famer"],[470,"First-Ballot Hall of Famer"],[1e9,"The GOAT"]];
+  const verdict=tiers.find(t=>score<t[0])[1];
+  let best=null,bd=1e9;SPORTS[sp].pool.forEach(p=>{const d=p.r.reduce((q,v,i)=>q+(v-a[i])*(v-a[i]),0);if(d<bd){bd=d;best=p.n;}});
+  return{sp,ovr,rows,score,verdict,mvps,titles,allstars,peak:Math.round(peak),comp:best,picks:picks.map(p=>({n:p.n,v:p.v,a:p.a}))};
+}
+
+/* ---------- views ---------- */
+const views={home:$("#view-home"),build:$("#view-build"),career:$("#view-career")};
+function show(v){Object.entries(views).forEach(([k,el])=>el.hidden=k!==v);window.scrollTo(0,0);}
+let mode="free";
+
+function renderStreak(){const d=daily();$("#streak").innerHTML="Daily streak <b>"+d.streak+"</b>";}
+function renderModeNote(){
+  const d=daily();const done=Object.keys(d.days[todayKey()]||{}).length;
+  $("#modenote").textContent=mode==="daily"
+    ?"Everyone gets the same reel order today. One attempt per sport per day. "+done+" of 8 done."
+    :"Random reels every time. Play as many builds as you like.";
+}
+function renderSports(){
+  const d=daily();const today=d.days[todayKey()]||{};
+  $("#sports").innerHTML=ORDER.map(k=>{const s=SPORTS[k];const done=mode==="daily"&&today[k]!=null;
+    return `<button class="tile" data-sport="${k}" ${done?"disabled":""}>${done?`<span class="done">Done · ${today[k]}</span>`:""}<span class="lg">${s.league}</span><h3>${s.name}</h3><span class="attrs">${s.short.join(" · ")}</span><span class="hint">${s.pool.length} real players</span></button>`;}).join("");
+}
+function renderMarquee(){
+  const all=[];ORDER.forEach(k=>SPORTS[k].pool.forEach(p=>all.push({n:p.n,k})));
+  const r=mulberry(7);const pick=[];for(let i=all.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[all[i],all[j]]=[all[j],all[i]];}
+  const items=all.slice(0,40).map(x=>`<span>${esc(x.n)}<em>${SPORTS[x.k].league.toUpperCase()}</em></span>`).join("");
+  $("#marquee").innerHTML=items+items;
+}
+function renderHof(){
+  const h=hof();
+  $("#hof").innerHTML=h.length?h.map(e=>`<div class="hofrow"><b>${esc(e.verdict)}</b><small>${esc(SPORTS[e.sp].name)} · ${e.ovr} OVR · ${e.seasons} seasons · plays like ${esc(e.comp)} · ${esc(e.date)}</small><div class="sc"><strong>${e.score}</strong>score</div></div>`).join(""):`<div class="empty">No careers saved yet. Build a player, sim the career and save it here.</div>`;
+}
+function home(){renderStreak();renderModeNote();renderSports();renderHof();show("home");}
+
+/* ---------- build ---------- */
+let B=null;
+function startBuild(sp){
+  const cfg=SPORTS[sp];const dk=todayKey();
+  let seq;
+  if(mode==="daily"){const r=mulberry(hash(sp+dk));const idx=cfg.pool.map((_,i)=>i);for(let i=idx.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[idx[i],idx[j]]=[idx[j],idx[i]];}seq=idx;}
+  B={sp,cfg,picks:Array(5).fill(null),cur:null,seq,si:0,used:new Set(),rerolls:1,spinning:false,dk};
+  $("#b-sub").textContent=cfg.league+" · "+(mode==="daily"?"Daily challenge "+dk:"Free play");
+  $("#b-title").textContent="Build a "+cfg.name;
+  $("#strip").style.transition="none";$("#strip").style.transform="translateY(0)";
+  $("#strip").innerHTML=Array.from({length:3},(_,i)=>`<div>${i===1?"Ready?":""}</div>`).join("");
+  renderBuild();show("build");
+}
+function ovrNow(){const f=B.picks.filter(Boolean);return f.length?Math.round(f.reduce((s,p)=>s+p.v,0)/f.length):null;}
+function renderBuild(){
+  const {cfg,picks,cur}=B;const done=picks.every(Boolean);
+  const o=ovrNow();$("#b-ovr").textContent=o==null?"--":o;$("#b-ovr").className="n "+(o==null?"":tier(o));
+  $("#slots").innerHTML=cfg.attrs.map((name,i)=>{const p=picks[i];
+    if(p)return `<div class="slot filled"><span class="a">${name}</span><span class="who">${esc(p.n)}</span><span class="v ${tier(p.v)}">${p.v}</span></div>`;
+    if(cur)return `<button class="slot target" data-slot="${i}"><span class="a">${name}</span><span class="who dim">Place ${esc(cur.n.split(" ").slice(-1)[0])} here</span><span class="v ${tier(cur.r[i])}">${cur.r[i]}</span></button>`;
+    return `<div class="slot"><span class="a">${name}</span><span class="who dim">Empty</span><span class="v t-low">--</span></div>`;}).join("");
+  const filled=picks.filter(Boolean).length;
+  $("#spinlabel").textContent=done?"Build complete":"Spin "+Math.min(filled+(cur?0:1),5)+" of 5";
+  const spin=$("#spin"),rr=$("#reroll");
+  spin.hidden=done;spin.disabled=B.spinning||!!cur;
+  rr.hidden=done;rr.disabled=B.spinning||!cur||B.rerolls<1;rr.textContent="Skip player ("+B.rerolls+")";
+  if(done){$("#card").innerHTML=`<h3>Ready to sim</h3><div class="hint">Overall ${o}. Your player will now live out a full career.</div><div class="actions"><button class="btn primary big" id="sim">Sim career</button></div>`;$("#hint").textContent="";}
+  else if(cur){$("#card").innerHTML=`<h3>${esc(cur.n)}</h3><div class="chips">${cfg.short.map((s,i)=>`<div class="chip"><small>${s}</small><b class="${tier(cur.r[i])}">${cur.r[i]}</b></div>`).join("")}</div>`;
+    $("#hint").textContent="Choose which empty slot gets this player's rating for that skill.";}
+  else if(!B.spinning){$("#card").innerHTML="";$("#hint").textContent=filled?"Spin for your next player.":"Every player you land is a real pro. Their rating for each skill goes straight into your build.";}
+}
+function nextPlayer(){
+  if(B.seq){while(B.used.has(B.seq[B.si]))B.si++;const p=B.cfg.pool[B.seq[B.si]];B.used.add(B.seq[B.si]);B.si++;return p;}
+  const avail=B.cfg.pool.map((p,i)=>i).filter(i=>!B.used.has(i));const i=avail[Math.floor(Math.random()*avail.length)];B.used.add(i);return B.cfg.pool[i];
+}
+function spin(){
+  if(B.spinning||B.cur)return;
+  const target=nextPlayer();runReel(target);
+}
+function runReel(target){
+  B.spinning=true;$("#card").innerHTML="";renderBuild();
+  const pool=B.cfg.pool;const N=26;const names=[];
+  for(let i=0;i<N;i++)names.push(pool[Math.floor(Math.random()*pool.length)].n);
+  const landIdx=N-2;names[landIdx]=target.n;
+  const strip=$("#strip");strip.style.transition="none";strip.style.transform="translateY(0)";
+  strip.innerHTML=names.map(n=>`<div>${esc(n)}</div>`).join("");
+  void strip.offsetHeight;
+  const dur=reduceMotion()?60:2600;
+  strip.style.transition=`transform ${dur}ms cubic-bezier(.1,.75,.12,1)`;
+  strip.style.transform=`translateY(${-(landIdx-1)*72}px)`;
+  setTimeout(()=>{B.spinning=false;B.cur=target;renderBuild();},dur+80);
+}
+function place(i){
+  if(!B.cur||B.picks[i])return;
+  B.picks[i]={n:B.cur.n,v:B.cur.r[i],a:B.cfg.attrs[i]};B.cur=null;renderBuild();
+}
+function reroll(){
+  if(!B.cur||B.rerolls<1||B.spinning)return;B.rerolls--;B.cur=null;spin();
+}
+
+/* ---------- career ---------- */
+let last=null;
+function runCareer(){
+  const rs=B.seq?mulberry(hash(B.sp+B.dk+B.picks.map(p=>p.n).join("|"))):Math.random;
+  last=simCareer(B.sp,B.picks,rs);last.daily=mode==="daily";last.dk=B.dk;
+  if(last.daily){const d=daily();d.days[B.dk]=d.days[B.dk]||{};d.days[B.dk][B.sp]=last.score;
+    if(d.last!==B.dk){const y=new Date();y.setDate(y.getDate()-1);const yk=y.getFullYear()+"-"+String(y.getMonth()+1).padStart(2,"0")+"-"+String(y.getDate()).padStart(2,"0");d.streak=d.last===yk?d.streak+1:1;d.last=B.dk;}
+    store("pr_daily",d);}
+  renderCareer();show("career");
+}
+function chartSvg(rows){
+  const W=640,H=180,L=34,R=12,T=12,Bm=26;const x=i=>L+(rows.length===1?0:(W-L-R)*i/(rows.length-1));const y=v=>T+(H-T-Bm)*(1-(clamp(v,50,100)-50)/50);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Overall rating by age">`;
+  [60,80,100].forEach(v=>{s+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">${v}</text>`;});
+  const pts=rows.map((r,i)=>x(i).toFixed(1)+","+y(r.ovr).toFixed(1)).join(" ");
+  s+=`<polygon points="${L},${y(50)} ${pts} ${x(rows.length-1)},${y(50)}" fill="var(--accent)" opacity=".12"/><polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>`;
+  const pk=rows.reduce((b,r,i)=>r.ovr>rows[b].ovr?i:b,0);
+  s+=`<circle cx="${x(pk)}" cy="${y(rows[pk].ovr)}" r="5" fill="var(--hot)"/><text x="${x(pk)}" y="${y(rows[pk].ovr)-10}" text-anchor="middle">${rows[pk].ovr}</text>`;
+  [0,rows.length-1].forEach(i=>{s+=`<text x="${x(i)}" y="${H-6}" text-anchor="${i?"end":"start"}">Age ${rows[i].age}</text>`;});
+  return s+"</svg>";
+}
+function renderCareer(){
+  const c=last,cfg=SPORTS[c.sp],cols=COLS[c.sp];
+  const head=HEAD[c.sp].map(k=>{const col=cols.find(x=>x.k===k);return `<div class="stat"><small>Career ${col.l}</small><b>${col.tot(c.rows)}</b></div>`;}).join("");
+  const solo=c.sp==="golf"||c.sp==="tennis";
+  $("#view-career").innerHTML=`
+    <div class="verdict"><div class="eyebrow">${cfg.league} · ${esc(cfg.name)} · ${c.daily?"Daily "+c.dk:"Free play"}</div>
+      <h2>${c.verdict.replace(/^(The )?(GOAT)$/,"The <span>GOAT</span>").replace(/^First-Ballot/,"<span>First-Ballot</span>")}</h2>
+      <div class="note" style="font-size:15px">Hall of Fame score <b>${c.score}</b> · overall ${c.ovr} · plays like <b>${esc(c.comp)}</b></div>
+      <div class="picks">${c.picks.map(p=>`<span class="badge">${p.a}: ${esc(p.n)} ${p.v}</span>`).join("")}</div></div>
+    <div class="stats">
+      <div class="stat"><small>Seasons</small><b>${c.rows.length}</b></div>
+      <div class="stat"><small>Peak OVR</small><b>${c.peak}</b></div>
+      <div class="stat"><small>${esc(cfg.award)}</small><b>${c.mvps}</b></div>
+      <div class="stat"><small>${solo?esc(cfg.title)+"s":esc(cfg.title)}</small><b>${c.titles}</b></div>
+      ${head}</div>
+    <div class="chart">${chartSvg(c.rows)}</div>
+    <div class="tw"><table><thead><tr><th>Age</th><th>OVR</th>${cols.map(x=>`<th>${x.l}</th>`).join("")}<th class="hon">Honors</th></tr></thead><tbody>
+      ${c.rows.map(r=>`<tr><td>${r.age}</td><td class="${tier(r.ovr)}"><b>${r.ovr}</b></td>${cols.map(x=>`<td>${x.f?x.f(r.s[x.k]):r.s[x.k]}</td>`).join("")}<td class="hon">${r.honors.map(h=>`<span class="badge ${h.t}">${esc(h.l)}</span>`).join("")}</td></tr>`).join("")}
+      <tr class="tot"><td>Career</td><td>${Math.round(c.rows.reduce((s,r)=>s+r.ovr,0)/c.rows.length)}</td>${cols.map(x=>`<td>${x.tot(c.rows)}</td>`).join("")}<td class="hon"></td></tr>
+    </tbody></table></div>
+    <div class="actions" style="margin-top:18px">
+      <button class="btn primary" id="save-hof">Save to Hall of Fame</button>
+      <button class="btn" id="again">${c.daily?"Back to sports":"Build another"}</button>
+      <button class="btn" id="to-home">Home</button>
+    </div>`;
+}
+function saveHof(){
+  if(last.saved){toast("Already saved");return;}
+  const h=hof();h.unshift({sp:last.sp,ovr:last.ovr,verdict:last.verdict,score:last.score,comp:last.comp,seasons:last.rows.length,date:todayKey()});
+  store("pr_hof",h.slice(0,30));last.saved=true;toast("Saved to your Hall of Fame");$("#save-hof").disabled=true;
+}
+
+/* ---------- events ---------- */
+$("#home-btn").onclick=home;$("#back-home").onclick=home;
+$("#mode-free").onclick=()=>{mode="free";$("#mode-free").setAttribute("aria-pressed","true");$("#mode-daily").setAttribute("aria-pressed","false");renderModeNote();renderSports();};
+$("#mode-daily").onclick=()=>{mode="daily";$("#mode-daily").setAttribute("aria-pressed","true");$("#mode-free").setAttribute("aria-pressed","false");renderModeNote();renderSports();};
+$("#sports").onclick=e=>{const t=e.target.closest("[data-sport]");if(t&&!t.disabled)startBuild(t.dataset.sport);};
+$("#slots").onclick=e=>{const t=e.target.closest("[data-slot]");if(t)place(+t.dataset.slot);};
+$("#spin").onclick=spin;$("#reroll").onclick=reroll;
+$("#card").onclick=e=>{if(e.target.id==="sim")runCareer();};
+$("#view-career").onclick=e=>{
+  const id=e.target.id;
+  if(id==="save-hof")saveHof();
+  else if(id==="again"){if(last.daily)home();else startBuild(last.sp);}
+  else if(id==="to-home")home();
+};
+renderMarquee();home();
+</script>
+</body>
+</html>
