@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Prime Reel</title>
-<meta name="description" content="Spin the reel, draft real pros into your player's attribute slots, then sim the whole career. Eleven sports, daily challenge, face-offs, achievements, Hall of Fame.">
+<meta name="description" content="Spin the reel, draft real pros into your player's attribute slots, then sim the whole career. Eighteen sports and positions, daily challenge, face-offs, achievements, Hall of Fame.">
 <meta name="theme-color" content="#090f1d">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -69,15 +69,17 @@ h1,h2,h3{font-family:var(--display);text-transform:uppercase;margin:0;line-heigh
 .marquee span em{font-style:normal;color:var(--hot);font-weight:700;margin-left:6px}
 @keyframes slide{to{transform:translateX(-50%)}}
 
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,210px),1fr));gap:12px}
 .tile{position:relative;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;min-height:150px;transition:transform .14s,border-color .14s}
 .tile:hover:not(:disabled){transform:translateY(-3px);border-color:var(--accent)}
 .tile:disabled{opacity:.6;cursor:not-allowed}
 .tile .lg{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-.tile h3{font-size:38px;font-weight:800}
+.tile h3{font-size:clamp(28px,7vw,36px);font-weight:800;overflow-wrap:anywhere;min-width:0}
 .tile .attrs{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:auto}
 .tile .done{position:absolute;top:12px;right:12px;font-family:var(--mono);font-size:11px;background:var(--good);color:#fff;border-radius:6px;padding:2px 8px}
 .sect{margin-top:34px}
+.grp{margin:22px 0 10px}
+.grp:first-child{margin-top:0}
 .sect h2{font-size:34px;margin-bottom:12px}
 .note{font-size:13px;color:var(--muted);max-width:75ch}
 
@@ -182,7 +184,7 @@ footer{margin-top:44px;font-size:12px;color:var(--muted);border-top:1px solid va
     <div class="marquee" aria-hidden="true"><div class="track" id="marquee"></div></div>
     <section>
       <div class="eyebrow" style="margin-bottom:10px">Pick a sport</div>
-      <div class="grid" id="sports"></div>
+      <div id="sports"></div>
     </section>
     <section class="sect">
       <h2>Hall of Fame</h2>
@@ -262,9 +264,30 @@ const SPORTS = {
     players:[["Michael Schumacher",96,98,96,96,98],["Lewis Hamilton",98,96,94,92,98],["Ayrton Senna",99,96,80,84,99],["Max Verstappen",96,99,96,92,98],["Alain Prost",88,95,98,99,88],["Juan Manuel Fangio",94,96,92,90,90],["Sebastian Vettel",98,88,92,88,84],["Fernando Alonso",92,99,96,96,94],["Jim Clark",96,94,94,90,90],["Niki Lauda",84,92,98,94,88],["Jackie Stewart",90,92,94,90,99],["Kimi Räikkönen",94,86,84,90,84],["Nigel Mansell",88,94,80,80,86],["Mika Häkkinen",94,94,92,88,86],["Nico Rosberg",92,86,92,90,80],["Lando Norris",96,90,88,88,84],["Charles Leclerc",98,86,80,84,84],["George Russell",92,88,90,88,88],["Oscar Piastri",92,90,94,92,86],["Jenson Button",84,88,90,94,96],["Damon Hill",84,88,90,86,90],["Gilles Villeneuve",92,96,70,72,96],["Stirling Moss",92,96,84,88,96],["Jack Brabham",84,90,94,90,86],["Mario Andretti",90,92,90,86,88],["Emerson Fittipaldi",86,90,92,90,86],["Carlos Sainz",90,90,92,90,86]]},
   cricket:{key:"cricket",league:"Cricket",name:"Batter",attrs:["Technique","Power","Temperament","Running","Fielding"],
     short:["TEC","POW","TMP","RUN","FLD"],start:19,peak:[26,34],retire:40,title:"World Cup",award:"Player of the Year",allstar:"Team of the Year",
-    players:[["Sachin Tendulkar",98,88,98,80,86],["Don Bradman",99,90,99,86,84],["Virat Kohli",96,88,96,92,92],["Brian Lara",96,94,90,80,80],["Ricky Ponting",92,92,94,84,94],["Jacques Kallis",96,88,96,80,88],["Rahul Dravid",98,72,99,74,90],["Steve Smith",94,80,98,80,92],["Kane Williamson",98,80,96,84,88],["Joe Root",96,82,96,82,86],["Viv Richards",90,98,92,84,90],["AB de Villiers",94,98,92,90,96],["MS Dhoni",84,96,98,94,90],["Sunil Gavaskar",98,72,98,72,80],["Rohit Sharma",92,96,92,76,80],["Babar Azam",96,84,90,84,84],["Sanath Jayasuriya",84,98,84,84,84],["Adam Gilchrist",88,96,88,88,94],["Kumar Sangakkara",96,86,92,84,90],["Hashim Amla",96,80,96,76,84],["Ben Stokes",88,94,92,88,92],["Jos Buttler",88,96,86,90,88],["Steve Waugh",90,84,99,84,86],["Virender Sehwag",84,99,80,84,84]]}
+    players:[["Sachin Tendulkar",98,88,98,80,86],["Don Bradman",99,90,99,86,84],["Virat Kohli",96,88,96,92,92],["Brian Lara",96,94,90,80,80],["Ricky Ponting",92,92,94,84,94],["Jacques Kallis",96,88,96,80,88],["Rahul Dravid",98,72,99,74,90],["Steve Smith",94,80,98,80,92],["Kane Williamson",98,80,96,84,88],["Joe Root",96,82,96,82,86],["Viv Richards",90,98,92,84,90],["AB de Villiers",94,98,92,90,96],["MS Dhoni",84,96,98,94,90],["Sunil Gavaskar",98,72,98,72,80],["Rohit Sharma",92,96,92,76,80],["Babar Azam",96,84,90,84,84],["Sanath Jayasuriya",84,98,84,84,84],["Adam Gilchrist",88,96,88,88,94],["Kumar Sangakkara",96,86,92,84,90],["Hashim Amla",96,80,96,76,84],["Ben Stokes",88,94,92,88,92],["Jos Buttler",88,96,86,90,88],["Steve Waugh",90,84,99,84,86],["Virender Sehwag",84,99,80,84,84]]},
+  mid:{key:"mid",league:"Soccer",name:"Midfielder",attrs:["Passing","Vision","Dribbling","Stamina","Tackling"],
+    short:["PAS","VIS","DRI","STA","TKL"],start:19,peak:[25,31],retire:37,title:"Champions League",award:"Ballon d'Or",allstar:"Team of the Year",
+    players:[["Xavi",99,99,88,84,60],["Andrés Iniesta",96,97,96,78,58],["Luka Modrić",95,96,92,84,72],["Kevin De Bruyne",98,99,88,84,54],["Zinedine Zidane",96,97,96,72,66],["Steven Gerrard",92,90,80,92,84],["Frank Lampard",88,86,78,94,70],["Paul Scholes",96,94,84,70,68],["Andrea Pirlo",98,98,80,64,60],["Patrick Vieira",84,80,80,92,94],["Roy Keane",82,80,74,96,96],["Sergio Busquets",92,92,80,82,90],["N'Golo Kanté",78,74,80,99,99],["Toni Kroos",99,96,72,80,68],["Casemiro",78,72,68,88,96],["Rodri",92,90,80,88,90],["Jude Bellingham",86,88,90,90,82],["Pedri",92,92,96,82,68],["Bruno Fernandes",92,94,82,90,66],["Michel Platini",94,96,90,78,60],["Bobby Charlton",92,90,84,88,74],["Lothar Matthäus",90,88,84,94,92],["Claude Makélélé",78,74,70,92,98],["Declan Rice",82,80,82,92,92],["Martin Ødegaard",92,94,90,80,60],["Thiago Alcântara",94,94,90,78,64]]},
+  def:{key:"def",league:"Soccer",name:"Defender",attrs:["Tackling","Positioning","Aerial","Pace","Passing"],
+    short:["TKL","POS","AIR","PAC","PAS"],start:19,peak:[26,32],retire:38,title:"Champions League",award:"Ballon d'Or",allstar:"Team of the Year",
+    players:[["Paolo Maldini",96,99,88,84,84],["Franco Baresi",94,99,84,80,84],["Franz Beckenbauer",88,96,84,84,96],["Sergio Ramos",92,90,96,84,78],["Virgil van Dijk",92,96,96,84,80],["Fabio Cannavaro",94,96,84,84,68],["John Terry",94,96,94,68,64],["Rio Ferdinand",88,92,90,84,82],["Carles Puyol",96,92,84,80,64],["Gerard Piqué",88,92,88,76,86],["Alessandro Nesta",96,98,84,84,74],["Bobby Moore",92,98,84,76,84],["Cafu",88,88,74,90,80],["Roberto Carlos",76,76,68,96,82],["Dani Alves",78,78,64,88,90],["Philipp Lahm",88,92,60,84,92],["Trent Alexander-Arnold",74,76,60,84,99],["Achraf Hakimi",80,80,66,99,84],["Marcelo",72,70,58,86,88],["Ashley Cole",90,88,64,88,76],["Thiago Silva",90,94,86,72,86],["Jaap Stam",92,92,96,78,66],["Marcel Desailly",92,92,90,84,74],["Rúben Dias",92,94,92,76,76],["Antonio Rüdiger",92,86,92,88,66],["Kalidou Koulibaly",92,90,92,86,66]]},
+  gk:{key:"gk",league:"Soccer",name:"Goalkeeper",attrs:["Reflexes","Handling","Positioning","Distribution","Aerial"],
+    short:["REF","HAN","POS","DIS","AIR"],start:20,peak:[27,35],retire:41,title:"Champions League",award:"Ballon d'Or",allstar:"Team of the Year",
+    players:[["Manuel Neuer",92,90,96,96,90],["Iker Casillas",98,92,94,72,78],["Gianluigi Buffon",94,96,96,74,88],["Lev Yashin",96,92,92,66,90],["Peter Schmeichel",92,92,92,74,98],["Oliver Kahn",94,90,92,66,86],["Edwin van der Sar",90,92,94,90,88],["Petr Čech",94,94,92,72,88],["Thibaut Courtois",92,94,96,80,96],["Alisson",94,94,94,92,84],["Ederson",88,88,88,99,80],["Jan Oblak",96,94,98,78,88],["David de Gea",98,90,92,70,74],["Gordon Banks",96,90,92,66,82],["Dino Zoff",88,92,96,66,84],["Gianluigi Donnarumma",92,90,90,80,94],["Emiliano Martínez",92,90,90,80,86],["Marc-André ter Stegen",90,88,90,96,80],["Hugo Lloris",94,88,90,80,82],["Kasper Schmeichel",90,88,88,82,84],["Víctor Valdés",86,86,88,92,78],["Fabien Barthez",90,84,84,78,78],["Yann Sommer",92,88,88,88,78],["Sepp Maier",92,90,88,70,88]]},
+  rb:{key:"rb",league:"Football",name:"Running Back",attrs:["Speed","Elusiveness","Power","Vision","Hands"],
+    short:["SPD","ELU","POW","VIS","HND"],start:21,peak:[23,27],retire:33,title:"Super Bowl",award:"Offensive Player of the Year",allstar:"Pro Bowl",
+    players:[["Barry Sanders",92,99,72,96,72],["Emmitt Smith",76,88,84,96,74],["Walter Payton",86,92,90,94,80],["Jim Brown",90,88,99,88,66],["Adrian Peterson",92,90,96,80,64],["Eric Dickerson",96,88,84,86,66],["Marshall Faulk",90,92,76,94,92],["LaDainian Tomlinson",88,92,86,92,88],["Derrick Henry",90,70,99,80,60],["Saquon Barkley",94,94,88,88,82],["Christian McCaffrey",92,92,80,92,96],["Jerome Bettis",60,66,99,80,60],["Bo Jackson",99,88,96,64,62],["O.J. Simpson",96,90,80,88,70],["Earl Campbell",84,80,99,80,56],["Tony Dorsett",96,90,78,86,70],["Marcus Allen",84,88,88,92,88],["Gale Sayers",96,99,72,88,74],["Terrell Davis",88,84,88,90,64],["Ezekiel Elliott",86,84,90,86,72],["Jonathan Taylor",96,88,88,84,64],["Chris Johnson",99,88,72,80,66],["Alvin Kamara",88,94,80,90,92],["Curtis Martin",86,88,84,90,72],["Frank Gore",78,86,84,90,72]]},
+  wr:{key:"wr",league:"Football",name:"Wide Receiver",attrs:["Speed","Hands","Route Running","Jumping","After the Catch"],
+    short:["SPD","HND","RTE","JMP","YAC"],start:21,peak:[24,30],retire:36,title:"Super Bowl",award:"Offensive Player of the Year",allstar:"Pro Bowl",
+    players:[["Jerry Rice",84,98,99,84,92],["Randy Moss",96,90,90,99,84],["Terrell Owens",88,92,88,88,96],["Calvin Johnson",92,96,88,99,82],["Larry Fitzgerald",78,99,94,94,80],["Julio Jones",92,94,92,94,92],["Antonio Brown",90,92,99,80,88],["Tyreek Hill",99,88,92,84,96],["Justin Jefferson",92,94,98,88,92],["Davante Adams",86,94,99,88,84],["Cooper Kupp",84,96,98,80,92],["Ja'Marr Chase",92,94,94,88,96],["Cris Carter",80,99,92,90,78],["Michael Irvin",84,92,92,88,90],["Marvin Harrison",88,94,98,84,84],["Steve Largent",74,92,96,74,78],["Odell Beckham Jr.",92,98,90,90,88],["DeAndre Hopkins",84,99,92,96,80],["Stefon Diggs",90,92,98,86,90],["Lynn Swann",86,92,88,92,86],["Isaac Bruce",88,90,94,84,88],["Torry Holt",90,90,94,84,86],["Hines Ward",78,92,90,80,90],["Andre Johnson",88,94,90,90,92],["Mike Evans",84,90,86,96,80],["CeeDee Lamb",90,92,94,88,96],["A.J. Brown",90,92,90,90,96]]},
+  edge:{key:"edge",league:"Football",name:"Pass Rusher",attrs:["Pass Rush","Run Stopping","Strength","Speed","Motor"],
+    short:["RSH","RUN","STR","SPD","MTR"],start:22,peak:[25,31],retire:36,title:"Super Bowl",award:"Defensive Player of the Year",allstar:"Pro Bowl",
+    players:[["Reggie White",99,92,99,84,96],["Bruce Smith",96,92,90,88,96],["Lawrence Taylor",99,88,90,92,96],["Deacon Jones",98,84,88,88,94],["J.J. Watt",98,96,96,84,99],["Aaron Donald",99,94,92,88,99],["Von Miller",96,84,80,94,92],["Julius Peppers",94,88,90,94,88],["Michael Strahan",94,94,90,84,90],["Khalil Mack",94,92,92,90,92],["Myles Garrett",98,90,92,94,92],["T.J. Watt",96,88,88,92,98],["Nick Bosa",96,92,92,90,96],["Joey Bosa",92,92,92,88,90],["Micah Parsons",98,84,84,94,96],["Chris Jones",96,92,96,84,90],["Cameron Jordan",90,94,92,84,92],["Jevon Kearse",94,80,80,96,88],["Dwight Freeney",96,72,72,98,92],["DeMarcus Ware",97,86,86,94,94],["Jared Allen",94,88,86,90,96],["Joe Greene",90,96,96,84,92],["Derrick Thomas",96,80,78,94,92],["Trey Hendrickson",92,84,86,88,94],["Maxx Crosby",90,92,88,86,99]]},
+  cb:{key:"cb",league:"Football",name:"Defensive Back",attrs:["Man Coverage","Speed","Ball Skills","Tackling","Instincts"],
+    short:["MAN","SPD","BAL","TKL","INS"],start:22,peak:[24,29],retire:34,title:"Super Bowl",award:"Defensive Player of the Year",allstar:"Pro Bowl",
+    players:[["Deion Sanders",99,99,92,76,90],["Darrelle Revis",99,92,88,88,92],["Rod Woodson",92,94,96,92,94],["Champ Bailey",96,96,88,86,90],["Ronnie Lott",88,86,92,99,98],["Ed Reed",80,90,99,88,99],["Charles Woodson",92,90,96,90,94],["Richard Sherman",92,84,96,84,92],["Jalen Ramsey",94,92,90,90,88],["Patrick Surtain II",96,90,92,88,90],["Sauce Gardner",96,92,90,86,88],["Stephon Gilmore",96,88,90,84,90],["Aeneas Williams",88,88,94,86,90],["Mel Blount",94,86,84,92,84],["Night Train Lane",90,88,96,90,94],["Troy Polamalu",86,90,94,94,99],["Marshon Lattimore",94,92,88,84,86],["Nnamdi Asomugha",99,90,84,88,90],["Chris Harris Jr.",92,88,86,86,88],["Patrick Peterson",92,96,86,86,84],["Antonio Cromartie",90,98,88,80,78],["Marcus Peters",88,86,98,80,88],["Tre'Davious White",92,88,90,86,88]]}
 };
-const ORDER=["pitcher","hitter","hoops","qb","soccer","hockey","golf","tennis","ufc","f1","cricket"];
+const ORDER=["pitcher","hitter","hoops","qb","rb","wr","edge","cb","soccer","mid","def","gk","hockey","golf","tennis","ufc","f1","cricket"];
 for(const k of ORDER){SPORTS[k].pool=SPORTS[k].players.map(p=>({n:p[0],r:p.slice(1)}));}
 
 /* ---------- helpers ---------- */
@@ -300,9 +323,16 @@ const COLS={
   tennis:[{k:"w",l:"W",tot:r=>sum(r,"w")},{k:"l",l:"L",tot:r=>sum(r,"l")},{k:"titles",l:"Titles",tot:r=>sum(r,"titles")},{k:"maj",l:"Slams",tot:r=>sum(r,"maj")}],
   ufc:[{k:"w",l:"W",tot:r=>sum(r,"w")},{k:"l",l:"L",tot:r=>sum(r,"l")},{k:"fin",l:"Finishes",tot:r=>sum(r,"fin")},{k:"tit",l:"Title wins",tot:r=>sum(r,"tit")}],
   f1:[{k:"races",l:"Races",tot:r=>sum(r,"races")},{k:"wins",l:"Wins",tot:r=>sum(r,"wins")},{k:"pod",l:"Podiums",tot:r=>sum(r,"pod")},{k:"poles",l:"Poles",tot:r=>sum(r,"poles")},{k:"pts",l:"Points",tot:r=>sum(r,"pts").toLocaleString()}],
-  cricket:[{k:"inns",l:"Inns",tot:r=>sum(r,"inns")},{k:"runs",l:"Runs",tot:r=>sum(r,"runs").toLocaleString()},{k:"avg",l:"Avg",f:v=>v.toFixed(1),tot:r=>wavg(r,"avg","inns",1)},{k:"hund",l:"100s",tot:r=>sum(r,"hund")},{k:"sr",l:"SR",f:v=>v.toFixed(0),tot:r=>wavg(r,"sr","inns",0)}]
+  cricket:[{k:"inns",l:"Inns",tot:r=>sum(r,"inns")},{k:"runs",l:"Runs",tot:r=>sum(r,"runs").toLocaleString()},{k:"avg",l:"Avg",f:v=>v.toFixed(1),tot:r=>wavg(r,"avg","inns",1)},{k:"hund",l:"100s",tot:r=>sum(r,"hund")},{k:"sr",l:"SR",f:v=>v.toFixed(0),tot:r=>wavg(r,"sr","inns",0)}],
+  mid:[{k:"apps",l:"Apps",tot:r=>sum(r,"apps")},{k:"gls",l:"Goals",tot:r=>sum(r,"gls")},{k:"ast",l:"Assists",tot:r=>sum(r,"ast")},{k:"kp",l:"Key passes",tot:r=>sum(r,"kp")},{k:"rating",l:"Rating",f:v=>v.toFixed(2),tot:r=>wavg(r,"rating","apps",2)}],
+  def:[{k:"apps",l:"Apps",tot:r=>sum(r,"apps")},{k:"cs",l:"Clean sheets",tot:r=>sum(r,"cs")},{k:"tkl",l:"Tackles",tot:r=>sum(r,"tkl")},{k:"gls",l:"Goals",tot:r=>sum(r,"gls")},{k:"ast",l:"Assists",tot:r=>sum(r,"ast")},{k:"rating",l:"Rating",f:v=>v.toFixed(2),tot:r=>wavg(r,"rating","apps",2)}],
+  gk:[{k:"apps",l:"Apps",tot:r=>sum(r,"apps")},{k:"cs",l:"Clean sheets",tot:r=>sum(r,"cs")},{k:"saves",l:"Saves",tot:r=>sum(r,"saves")},{k:"sp",l:"Save %",f:v=>v.toFixed(0)+"%",tot:r=>wavg(r,"sp","apps",0)+"%"},{k:"gag",l:"GA/G",f:v=>v.toFixed(2),tot:r=>wavg(r,"gag","apps",2)}],
+  rb:[{k:"gp",l:"GP",tot:r=>sum(r,"gp")},{k:"att",l:"Att",tot:r=>sum(r,"att")},{k:"yds",l:"Rush YDS",tot:r=>sum(r,"yds").toLocaleString()},{k:"ypc",l:"YPC",f:v=>v.toFixed(1),tot:r=>wavg(r,"ypc","att",1)},{k:"td",l:"TD",tot:r=>sum(r,"td")},{k:"rec",l:"Rec",tot:r=>sum(r,"rec")}],
+  wr:[{k:"gp",l:"GP",tot:r=>sum(r,"gp")},{k:"rec",l:"Rec",tot:r=>sum(r,"rec")},{k:"yds",l:"YDS",tot:r=>sum(r,"yds").toLocaleString()},{k:"ypr",l:"Y/R",f:v=>v.toFixed(1),tot:r=>wavg(r,"ypr","rec",1)},{k:"td",l:"TD",tot:r=>sum(r,"td")}],
+  edge:[{k:"gp",l:"GP",tot:r=>sum(r,"gp")},{k:"tkl",l:"Tackles",tot:r=>sum(r,"tkl")},{k:"tfl",l:"TFL",tot:r=>sum(r,"tfl")},{k:"sacks",l:"Sacks",tot:r=>sum(r,"sacks")},{k:"ff",l:"FF",tot:r=>sum(r,"ff")}],
+  cb:[{k:"gp",l:"GP",tot:r=>sum(r,"gp")},{k:"tkl",l:"Tackles",tot:r=>sum(r,"tkl")},{k:"int",l:"INT",tot:r=>sum(r,"int")},{k:"pd",l:"PD",tot:r=>sum(r,"pd")}]
 };
-const HEAD={pitcher:["w","k","era"],hitter:["hr","rbi","avg"],hoops:["pts","reb","ast"],qb:["yds","td","rate"],soccer:["gls","ast","apps"],hockey:["g","a","pts"],golf:["wins","maj","top10"],tennis:["titles","maj","w"],ufc:["w","fin","tit"],f1:["wins","pod","poles"],cricket:["runs","hund","avg"]};
+const HEAD={pitcher:["w","k","era"],hitter:["hr","rbi","avg"],hoops:["pts","reb","ast"],qb:["yds","td","rate"],soccer:["gls","ast","apps"],hockey:["g","a","pts"],golf:["wins","maj","top10"],tennis:["titles","maj","w"],ufc:["w","fin","tit"],f1:["wins","pod","poles"],cricket:["runs","hund","avg"],mid:["ast","gls","apps"],def:["cs","apps","tkl"],gk:["cs","saves","apps"],rb:["yds","td","ypc"],wr:["yds","rec","td"],edge:["sacks","tkl","ff"],cb:["int","pd","tkl"]};
 
 function seasonStats(sp,a,ovr,av,r){
   const t=g(ovr),n=()=>(r()-.5);
@@ -339,6 +369,22 @@ function seasonStats(sp,a,ovr,av,r){
     case"cricket":{const [te,po,tm,ru]=a.map(g);
       const inns=Math.round(28*av+3);const avg=clamp(22+40*(.45*te+.35*tm+.2*po)+n()*3,15,75);
       return{inns,runs:Math.round(inns*avg*.9),avg,hund:Math.max(0,Math.round(inns*(avg-22)/150)),sr:70+30*(.6*po+.4*ru)};}
+    case"mid":{const [pa,vi,dr,st,tk]=a.map(g);const apps=Math.round(38*av);
+      return{apps,gls:Math.round((1+9*(.5*dr+.5*t)*(.7+.3*st))*av*(.8+.4*r())),ast:Math.round((1+15*pa*(.6+.4*vi))*av*(.8+.4*r())),kp:Math.round((20+60*vi)*av),rating:6+2.3*t+n()*.2};}
+    case"def":{const [tk,po,ai,pc,pa]=a.map(g);const apps=Math.round(38*av);
+      return{apps,cs:Math.round(apps*(.15+.45*t*(.5+.5*po))),tkl:Math.round((30+90*tk*(.5+.5*po))*av),gls:Math.round((.3+4*ai*(.5+.5*t))*av*(.7+.6*r())),ast:Math.round((.5+6*pa)*av*(.7+.6*r())),rating:6+2.3*t+n()*.2};}
+    case"gk":{const [rf,ha,po]=a.map(g);const apps=Math.round(38*av);
+      return{apps,cs:Math.round(apps*(.18+.5*t*(.5+.5*po)*(.8+.4*r()))),saves:Math.round(apps*(1.8+2.6*rf*(.6+.4*ha))),sp:clamp(62+22*(.5*rf+.3*ha+.2*po)+n()*3,55,92),gag:clamp(2.1-1.15*t*(.5+.5*po)+n()*.3,.5,2.8)};}
+    case"rb":{const [sp,el,po,vi,ha]=a.map(g);const att=Math.round((120+220*t)*av);
+      const ypc=clamp(3.4+1.9*(.35*el+.3*sp+.2*po+.15*vi)+n()*.4,3,6.5);const yds=Math.round(att*ypc);
+      return{gp:Math.round(17*av),att,yds,ypc,td:Math.round(yds/110*(.6+.6*po)),rec:Math.round((10+60*ha)*av*(.8+.4*r()))};}
+    case"wr":{const [sp,ha,rt,jm,ya]=a.map(g);const rec=Math.round((30+80*(.4*ha+.4*rt+.2*t))*av);
+      const ypr=clamp(10+6.5*(.5*sp+.3*ya+.2*jm)+n()*1.2,8,20);const yds=Math.round(rec*ypr);
+      return{gp:Math.round(17*av),rec,yds,ypr,td:Math.round(yds/115*(.6+.5*t))};}
+    case"edge":{const [rs,ru,st,sp,mo]=a.map(g);const sacks=Math.round((1+19*rs*(.6+.4*t))*av*(.85+.3*r()));
+      return{gp:Math.round(17*av),tkl:Math.round((25+55*(.5*ru+.3*st+.2*mo))*av),tfl:Math.round(sacks*.6+(3+12*ru)*av),sacks,ff:Math.round(sacks/5*(.6+.8*r()))};}
+    case"cb":{const [mn,sp,bs,tk,ins]=a.map(g);
+      return{gp:Math.round(17*av),tkl:Math.round((20+55*tk*(.6+.4*ins))*av),int:Math.round((.3+8*bs*(.5+.5*ins)*(.5+.6*r()))*av),pd:Math.round((4+18*(.5*mn+.3*bs+.2*sp))*av)};}
   }
 }
 function ageFactor(cfg,age){
@@ -370,7 +416,7 @@ function simCareer(sp,picks,r){
     if(rows.length>=3&&so<60&&age>cfg.peak[1]+2)break;
   }
   score+=mvps*12+titles*(solo?12:10)+allstars*2;
-  score=Math.round(score*({golf:.5,tennis:.68,f1:.66,ufc:.85,cricket:.9}[sp]||1));
+  score=Math.round(score*({golf:.5,tennis:.68,f1:.66,ufc:.85,cricket:.9,rb:1.5,cb:1.15,def:1.1,edge:.88,wr:.95}[sp]||1));
   const tiers=[[70,"Journeyman"],[140,"Solid Pro"],[230,"All-Star"],[340,"Hall of Famer"],[470,"First-Ballot Hall of Famer"],[1e9,"The GOAT"]];
   const verdict=tiers.find(t=>score<t[0])[1];
   let best=null,bd=1e9;SPORTS[sp].pool.forEach(p=>{const d=p.r.reduce((q,v,i)=>q+(v-a[i])*(v-a[i]),0);if(d<bd){bd=d;best=p.n;}});
@@ -444,8 +490,9 @@ function renderModeNote(){
 }
 function renderSports(){
   const d=daily();const today=d.days[todayKey()]||{};
-  $("#sports").innerHTML=ORDER.map(k=>{const s=SPORTS[k];const done=mode==="daily"&&today[k]!=null;
-    return `<button class="tile" data-sport="${k}" ${done?"disabled":""}>${done?`<span class="done">Done · ${today[k]}</span>`:""}<span class="lg">${s.league}</span><h3>${s.name}</h3><span class="attrs">${s.short.join(" · ")}</span><span class="hint">${s.pool.length} real players</span></button>`;}).join("");
+  const leagues=[];ORDER.forEach(k=>{if(!leagues.includes(SPORTS[k].league))leagues.push(SPORTS[k].league);});
+  $("#sports").innerHTML=leagues.map(lg=>`<div class="eyebrow grp">${esc(lg)}</div><div class="grid">`+ORDER.filter(k=>SPORTS[k].league===lg).map(k=>{const s=SPORTS[k];const done=mode==="daily"&&today[k]!=null;
+    return `<button class="tile" data-sport="${k}" ${done?"disabled":""}>${done?`<span class="done">Done · ${today[k]}</span>`:""}<span class="lg">${s.league}</span><h3>${s.name}</h3><span class="attrs">${s.short.join(" · ")}</span><span class="hint">${s.pool.length} real players</span></button>`;}).join("")+`</div>`).join("");
 }
 function renderMarquee(){
   const all=[];ORDER.forEach(k=>SPORTS[k].pool.forEach(p=>all.push({n:p.n,k})));
@@ -457,7 +504,7 @@ function renderHof(){
   const h=hof();
   $("#hof").innerHTML=h.length?h.map(e=>`<div class="hofrow"><b>${esc(e.verdict)}</b><small>${esc(SPORTS[e.sp].name)} · ${e.ovr} OVR · ${e.seasons} seasons · plays like ${esc(e.comp)} · ${esc(e.date)}</small><div class="sc"><strong>${e.score}</strong>score</div></div>`).join(""):`<div class="empty">No careers saved yet. Build a player, sim the career and save it here.</div>`;
 }
-function home(){$("#count").textContent="Career simulator · "+ORDER.length+" sports · "+ORDER.reduce((n,k)=>n+SPORTS[k].pool.length,0)+" real pros";renderAch();renderStreak();renderModeNote();renderSports();renderHof();show("home");}
+function home(){$("#count").textContent="Career simulator · "+ORDER.length+" sports and positions · "+ORDER.reduce((n,k)=>n+SPORTS[k].pool.length,0)+" real pros";renderAch();renderStreak();renderModeNote();renderSports();renderHof();show("home");}
 
 /* ---------- build ---------- */
 let B=null;
