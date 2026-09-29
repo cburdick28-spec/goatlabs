@@ -160,7 +160,37 @@ tr.tot td{font-weight:700;border-bottom:0;background:var(--chip)}
 .picks{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;z-index:20;max-width:calc(100% - 32px)}
 footer{margin-top:44px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px;max-width:80ch}
-@media (prefers-reduced-motion:reduce){.marquee .track{animation:none}.btn,.tile{transition:none}}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes pop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.1);opacity:1}100%{transform:scale(1);opacity:1}}
+@keyframes flip{from{transform:rotateX(90deg);opacity:0}to{transform:none;opacity:1}}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 0 7px color-mix(in srgb,var(--hot) 35%,transparent)}}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes areain{from{opacity:0}to{opacity:.12}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+main.enter{animation:rise .35s ease backwards}
+.tile{animation:rise .45s ease backwards;animation-delay:calc(var(--i,0)*35ms)}
+.chip{animation:flip .4s ease backwards;animation-delay:calc(var(--i,0)*80ms);transform-origin:top center}
+.card h3{animation:pop .45s ease backwards}
+.strip{transition:filter .25s}
+.strip.spinning{filter:blur(2.5px)}
+.window.lit::before{animation:glow .7s ease 2}
+.slot.popin{animation:pop .45s ease}
+.slot.target{animation:pulse 1.6s ease-in-out infinite}
+.slot.target:hover{animation:none}
+.toast{animation:rise .25s ease}
+.pre{opacity:0;visibility:hidden}
+.reveal{animation:rise .5s ease backwards}
+.verdict h2.reveal{animation:pop .6s ease backwards}
+tr.hide{display:none}
+tr.new{animation:rise .3s ease backwards}
+.playbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;min-height:40px}
+.live{font-family:var(--mono);font-size:13px;color:var(--muted)}
+.chart .line{stroke-dasharray:1;stroke-dashoffset:1;animation:draw var(--dur,1.6s) linear forwards}
+.chart .area{opacity:.12;animation:areain var(--dur,1.6s) ease backwards}
+.chart .pk{animation:pop .4s ease backwards;animation-delay:var(--dur,1.6s);transform-box:fill-box;transform-origin:center}
+.vs h3{animation:pop .5s ease backwards}
+canvas#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:30}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.marquee .track{animation:none}.chart .line{stroke-dashoffset:0}}
 </style>
 </head>
 <body>
@@ -302,6 +332,23 @@ function tier(v){return v>=92?"t-elite":v>=82?"t-great":v>=70?"t-good":"t-low";}
 function todayKey(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
 function store(key,val){try{if(val===undefined){const v=localStorage.getItem(key);return v?JSON.parse(v):null;}localStorage.setItem(key,JSON.stringify(val));}catch(e){return null;}}
+function countTo(el,from,to,ms){
+  if(reduceMotion()||from===to){el.textContent=to;return;}
+  const t0=performance.now();
+  (function f(t){const k=Math.min(1,(t-t0)/ms);el.textContent=Math.round(from+(to-from)*(1-Math.pow(1-k,3)));if(k<1)requestAnimationFrame(f);})(t0);
+}
+function confetti(big){
+  if(reduceMotion())return;
+  const old=document.getElementById("fx");if(old)old.remove();
+  const cv=document.createElement("canvas");cv.id="fx";document.body.appendChild(cv);
+  const W=cv.width=innerWidth,H=cv.height=innerHeight,ctx=cv.getContext("2d");
+  const cols=["#e8460f","#1d4dff","#f0b93a","#38c98c","#ffffff","#ff7a45"];
+  const ps=Array.from({length:big?230:110},()=>({x:W/2+(Math.random()-.5)*W*.3,y:H*.38,vx:(Math.random()-.5)*15,vy:-Math.random()*14-3,r:5+Math.random()*6,c:cols[Math.floor(Math.random()*cols.length)],a:Math.random()*6,va:(Math.random()-.5)*.4}));
+  let t0=null;
+  (function f(t){if(!t0)t0=t;ctx.clearRect(0,0,W,H);
+    ps.forEach(p=>{p.vy+=.35;p.x+=p.vx;p.y+=p.vy;p.vx*=.99;p.a+=p.va;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.a);ctx.fillStyle=p.c;ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*.6);ctx.restore();});
+    if(t-t0<3400)requestAnimationFrame(f);else cv.remove();})(performance.now());
+}
 let toastT;function toast(msg){const t=$("#toast");t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2600);}
 const reduceMotion=()=>window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -457,7 +504,7 @@ function renderAch(){
 function faceOff(){
   if(last.rival)return;
   const rv=makeRival(last.sp,last.daily?last.dk+last.sp+"rival":null);last.rival=rv;
-  const you=last;last.beat=you.score>rv.score;checkAch(last);
+  const you=last;last.beat=you.score>rv.score;checkAch(last);if(last.beat)confetti(false);
   const rows=[["Overall",you.ovr,rv.ovr],["Peak rating",you.peak,rv.peak],["Seasons",you.rows.length,rv.rows.length],[SPORTS[you.sp].award,you.mvps,rv.mvps],[SPORTS[you.sp].title,you.titles,rv.titles],["Hall of Fame score",you.score,rv.score]];
   const head=you.score===rv.score?"Dead heat":you.beat?"You win":"Rival wins";
   $("#faceoff").innerHTML=`<h3>${head}</h3>
@@ -478,7 +525,7 @@ function copyResult(){
 
 /* ---------- views ---------- */
 const views={home:$("#view-home"),build:$("#view-build"),career:$("#view-career")};
-function show(v){Object.entries(views).forEach(([k,el])=>el.hidden=k!==v);window.scrollTo(0,0);}
+function show(v){Object.entries(views).forEach(([k,el])=>{el.hidden=k!==v;el.classList.remove("enter");});const el=views[v];void el.offsetWidth;el.classList.add("enter");window.scrollTo(0,0);}
 let mode="free";
 
 function renderStreak(){const d=daily();$("#streak").innerHTML="Daily streak <b>"+d.streak+"</b>";}
@@ -490,9 +537,9 @@ function renderModeNote(){
 }
 function renderSports(){
   const d=daily();const today=d.days[todayKey()]||{};
-  const leagues=[];ORDER.forEach(k=>{if(!leagues.includes(SPORTS[k].league))leagues.push(SPORTS[k].league);});
+  let ti=0;const leagues=[];ORDER.forEach(k=>{if(!leagues.includes(SPORTS[k].league))leagues.push(SPORTS[k].league);});
   $("#sports").innerHTML=leagues.map(lg=>`<div class="eyebrow grp">${esc(lg)}</div><div class="grid">`+ORDER.filter(k=>SPORTS[k].league===lg).map(k=>{const s=SPORTS[k];const done=mode==="daily"&&today[k]!=null;
-    return `<button class="tile" data-sport="${k}" ${done?"disabled":""}>${done?`<span class="done">Done · ${today[k]}</span>`:""}<span class="lg">${s.league}</span><h3>${s.name}</h3><span class="attrs">${s.short.join(" · ")}</span><span class="hint">${s.pool.length} real players</span></button>`;}).join("")+`</div>`).join("");
+    return `<button class="tile" style="--i:${ti++}" data-sport="${k}" ${done?"disabled":""}>${done?`<span class="done">Done · ${today[k]}</span>`:""}<span class="lg">${s.league}</span><h3>${s.name}</h3><span class="attrs">${s.short.join(" · ")}</span><span class="hint">${s.pool.length} real players</span></button>`;}).join("")+`</div>`).join("");
 }
 function renderMarquee(){
   const all=[];ORDER.forEach(k=>SPORTS[k].pool.forEach(p=>all.push({n:p.n,k})));
@@ -522,7 +569,7 @@ function startBuild(sp){
 function ovrNow(){const f=B.picks.filter(Boolean);return f.length?Math.round(f.reduce((s,p)=>s+p.v,0)/f.length):null;}
 function renderBuild(){
   const {cfg,picks,cur}=B;const done=picks.every(Boolean);
-  const o=ovrNow();$("#b-ovr").textContent=o==null?"--":o;$("#b-ovr").className="n "+(o==null?"":tier(o));
+  const o=ovrNow();const pv=B.shown||0;B.shown=o==null?0:o;if(o==null)$("#b-ovr").textContent="--";else countTo($("#b-ovr"),pv,o,520);$("#b-ovr").className="n "+(o==null?"":tier(o));
   $("#slots").innerHTML=cfg.attrs.map((name,i)=>{const p=picks[i];
     if(p)return `<div class="slot filled"><span class="a">${name}</span><span class="who">${esc(p.n)}</span><span class="v ${tier(p.v)}">${p.v}</span></div>`;
     if(cur)return `<button class="slot target" data-slot="${i}"><span class="a">${name}</span><span class="who dim">Place ${esc(cur.n.split(" ").slice(-1)[0])} here</span><span class="v ${tier(cur.r[i])}">${cur.r[i]}</span></button>`;
@@ -533,7 +580,7 @@ function renderBuild(){
   spin.hidden=done;spin.disabled=B.spinning||!!cur;
   rr.hidden=done;rr.disabled=B.spinning||!cur||B.rerolls<1;rr.textContent="Skip player ("+B.rerolls+")";
   if(done){$("#card").innerHTML=`<h3>Ready to sim</h3><div class="hint">Overall ${o}. Your player will now live out a full career.</div><div class="actions"><button class="btn primary big" id="sim">Sim career</button></div>`;$("#hint").textContent="";}
-  else if(cur){$("#card").innerHTML=`<h3>${esc(cur.n)}</h3><div class="chips">${cfg.short.map((s,i)=>`<div class="chip"><small>${s}</small><b class="${tier(cur.r[i])}">${cur.r[i]}</b></div>`).join("")}</div>`;
+  else if(cur){$("#card").innerHTML=`<h3>${esc(cur.n)}</h3><div class="chips">${cfg.short.map((s,i)=>`<div class="chip" style="--i:${i}"><small>${s}</small><b class="${tier(cur.r[i])}">${cur.r[i]}</b></div>`).join("")}</div>`;
     $("#hint").textContent="Choose which empty slot gets this player's rating for that skill.";}
   else if(!B.spinning){$("#card").innerHTML="";$("#hint").textContent=filled?"Spin for your next player.":"Every player you land is a real pro. Their rating for each skill goes straight into your build.";}
 }
@@ -553,14 +600,15 @@ function runReel(target){
   const strip=$("#strip");strip.style.transition="none";strip.style.transform="translateY(0)";
   strip.innerHTML=names.map(n=>`<div>${esc(n)}</div>`).join("");
   void strip.offsetHeight;
-  const dur=reduceMotion()?60:2600;
-  strip.style.transition=`transform ${dur}ms cubic-bezier(.1,.75,.12,1)`;
+  const dur=reduceMotion()?60:2700;
+  strip.classList.add("spinning");setTimeout(()=>strip.classList.remove("spinning"),dur*.7);
+  strip.style.transition=`transform ${dur}ms cubic-bezier(.1,.75,.15,1.03)`;
   strip.style.transform=`translateY(${-(landIdx-1)*72}px)`;
-  setTimeout(()=>{B.spinning=false;B.cur=target;renderBuild();},dur+80);
+  setTimeout(()=>{B.spinning=false;B.cur=target;renderBuild();const w=document.querySelector(".window");w.classList.remove("lit");void w.offsetWidth;w.classList.add("lit");},dur+80);
 }
 function place(i){
   if(!B.cur||B.picks[i])return;
-  B.picks[i]={n:B.cur.n,v:B.cur.r[i],a:B.cfg.attrs[i]};B.cur=null;renderBuild();
+  B.picks[i]={n:B.cur.n,v:B.cur.r[i],a:B.cfg.attrs[i]};B.cur=null;renderBuild();const sl=$("#slots").children[i];if(sl)sl.classList.add("popin");
 }
 function reroll(){
   if(!B.cur||B.rerolls<1||B.spinning)return;B.rerolls--;B.cur=null;spin();
@@ -582,11 +630,40 @@ function chartSvg(rows){
   let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Overall rating by age">`;
   [60,80,100].forEach(v=>{s+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">${v}</text>`;});
   const pts=rows.map((r,i)=>x(i).toFixed(1)+","+y(r.ovr).toFixed(1)).join(" ");
-  s+=`<polygon points="${L},${y(50)} ${pts} ${x(rows.length-1)},${y(50)}" fill="var(--accent)" opacity=".12"/><polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>`;
+  s+=`<polygon class="area" points="${L},${y(50)} ${pts} ${x(rows.length-1)},${y(50)}" fill="var(--accent)"/><polyline class="line" pathLength="1" points="${pts}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>`;
   const pk=rows.reduce((b,r,i)=>r.ovr>rows[b].ovr?i:b,0);
-  s+=`<circle cx="${x(pk)}" cy="${y(rows[pk].ovr)}" r="5" fill="var(--hot)"/><text x="${x(pk)}" y="${y(rows[pk].ovr)-10}" text-anchor="middle">${rows[pk].ovr}</text>`;
+  s+=`<circle class="pk" cx="${x(pk)}" cy="${y(rows[pk].ovr)}" r="5" fill="var(--hot)"/><text class="pk" x="${x(pk)}" y="${y(rows[pk].ovr)-10}" text-anchor="middle">${rows[pk].ovr}</text>`;
   [0,rows.length-1].forEach(i=>{s+=`<text x="${x(i)}" y="${H-6}" text-anchor="${i?"end":"start"}">Age ${rows[i].age}</text>`;});
   return s+"</svg>";
+}
+let skipFn=null,playT=null;
+function finishCareer(){if(skipFn)skipFn();}
+function playCareer(){
+  clearTimeout(playT);
+  const c=last,root=$("#view-career");
+  const rows=[...root.querySelectorAll("tbody tr:not(.tot)")];
+  const gated=[...root.querySelectorAll(".verdict h2,.verdict .note,.stats,.actions,tr.tot")];
+  const skip=$("#skip"),live=$("#live"),svg=root.querySelector(".chart svg");
+  let i=0,over=false;const step=clamp(3400/rows.length,90,260);
+  const finish=()=>{
+    if(over)return;over=true;clearTimeout(playT);
+    rows.forEach(r=>r.classList.remove("hide"));
+    gated.forEach(e=>{e.classList.remove("pre");e.classList.add("reveal");});
+    skip.hidden=true;live.textContent="Career complete";
+    svg.querySelectorAll(".line,.area,.pk").forEach(e=>{e.style.animation="none";});
+    svg.querySelector(".line").style.strokeDashoffset="0";svg.querySelector(".area").style.opacity=".12";
+    if(c.score>=340)confetti(c.verdict==="The GOAT"||c.verdict.indexOf("First")===0);
+  };
+  skipFn=finish;
+  if(reduceMotion()){finish();return;}
+  rows.forEach(r=>r.classList.add("hide"));gated.forEach(e=>e.classList.add("pre"));
+  svg.style.setProperty("--dur",(step*rows.length)+"ms");
+  const tick=()=>{
+    if(over)return;const r=rows[i],d=c.rows[i];r.classList.remove("hide");r.classList.add("new");
+    live.textContent="Age "+d.age+" · OVR "+d.ovr+(d.honors.length?" · "+d.honors.map(h=>h.l).join(", "):"");
+    i++;playT=setTimeout(i<rows.length?tick:finish,i<rows.length?step:600);
+  };
+  tick();
 }
 function renderCareer(){
   const c=last,cfg=SPORTS[c.sp],cols=COLS[c.sp];
@@ -603,6 +680,7 @@ function renderCareer(){
       <div class="stat"><small>${esc(cfg.award)}</small><b>${c.mvps}</b></div>
       <div class="stat"><small>${solo?esc(cfg.title)+"s":esc(cfg.title)}</small><b>${c.titles}</b></div>
       ${head}</div>
+    <div class="playbar"><span class="live" id="live"></span><button class="btn" id="skip">Skip</button></div>
     <div class="chart">${chartSvg(c.rows)}</div>
     <div class="tw"><table><thead><tr><th>Age</th><th>OVR</th>${cols.map(x=>`<th>${x.l}</th>`).join("")}<th class="hon">Honors</th></tr></thead><tbody>
       ${c.rows.map(r=>`<tr><td>${r.age}</td><td class="${tier(r.ovr)}"><b>${r.ovr}</b></td>${cols.map(x=>`<td>${x.f?x.f(r.s[x.k]):r.s[x.k]}</td>`).join("")}<td class="hon">${r.honors.map(h=>`<span class="badge ${h.t}">${esc(h.l)}</span>`).join("")}</td></tr>`).join("")}
@@ -617,6 +695,7 @@ function renderCareer(){
     </div>
     <textarea id="sharebox" hidden rows="5" style="width:100%;margin-top:12px;font:13px var(--mono);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px" readonly aria-label="Result text"></textarea>
     <div class="vs" id="faceoff"></div>`;
+  playCareer();
 }
 function saveHof(){
   if(last.saved){toast("Already saved");return;}
@@ -635,6 +714,7 @@ $("#card").onclick=e=>{if(e.target.id==="sim")runCareer();};
 $("#view-career").onclick=e=>{
   const id=e.target.id;
   if(id==="save-hof")saveHof();
+  else if(id==="skip")finishCareer();
   else if(id==="faceoff-btn")faceOff();
   else if(id==="copy-res")copyResult();
   else if(id==="again"){if(last.daily)home();else startBuild(last.sp);}
